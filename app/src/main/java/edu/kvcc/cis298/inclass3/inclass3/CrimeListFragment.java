@@ -8,6 +8,12 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import java.security.PrivateKey;
+import java.util.List;
 
 /**
  * Created by rpeck0914 on 11/2/2015.
@@ -16,6 +22,9 @@ public class CrimeListFragment extends Fragment {
 
     //Class Level Variable To Hold The Recycler View.
     private RecyclerView mCrimeRecyclerView;
+
+    //Variable To Hold An Instance Of The Adapter
+    private CrimeAdapter mAdapter;
 
     @Nullable
     @Override
@@ -40,7 +49,113 @@ public class CrimeListFragment extends Fragment {
         //Hosting This Fragment.
         mCrimeRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
+        //Calls The updateUI Method To Do The Work Of Getting The Data From The CrimeLab, setting
+        //It Up With The Adapter, And Then Adding The Adapter To The Recycler View.
+        updateUI();
+
         //Return The Created View
         return v;
+    }
+
+    private void updateUI() {
+        //Get The Collection Of Data From The crimeLab Singleton. The Get Method Constructor Requires
+        //A Context Is Passed In, So We Send It The Hosting Activity Of This Fragment.
+        CrimeLab crimeLab = CrimeLab.get(getActivity());
+
+        //Get The Actual List Of Crimes From The CrimeLab Class
+        List<Crime> crimes = crimeLab.getCrimes();
+
+        //Create A New CrimeAdapter And Send It Over The List Of Crimes. Crime Adapter Needs The List
+        //Of Crimes So That It Can Work With The RecyclerView To Display Them.
+        mAdapter = new CrimeAdapter(crimes);
+
+        //Takes The RecyclerView And Sets It's Adapter To The Adapter We Just Created.
+        mCrimeRecyclerView.setAdapter(mAdapter);
+    }
+
+    private class CrimeHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+
+        //Create A Class Level Variable To Hold The View For
+        //This Holder.
+        private TextView mTitleTextView;
+        private TextView mDateTextView;
+        private CheckBox mSolvedCheckBox;
+
+        private Crime mCrime;
+
+        //Constructor That Takes In A View. The Parent Constructor
+        //Is Called, And Then Passed In View Is Assigned
+        //To The Class Level Version.
+        public CrimeHolder(View itemView) {
+            super(itemView);
+            itemView.setOnClickListener(this);
+
+            //Do Assignment To Class Level Variables. Use The findViewById method To Get Access
+            //To The Various Controls We Want To Do Work With
+            mTitleTextView = (TextView) itemView.findViewById(R.id.list_item_crime_title_text_view);
+            mDateTextView = (TextView) itemView.findViewById(R.id.list_item_crime_date_text_view);
+            mSolvedCheckBox = (CheckBox) itemView.findViewById(R.id.list_item_crime_solved_check_box);
+        }
+
+        //Method To Take In An Instance Of A Crime, And Assign It To The Class Level Version. Then
+        //Use The Class Level Version To Take Properties From The Crime And Assign Them To The
+        //Various View Controls.
+        public void bindCrime(Crime crime) {
+            mCrime = crime;
+            mTitleTextView.setText(mCrime.getTitle());
+            mDateTextView.setText(mCrime.getDate().toString());
+            mSolvedCheckBox.setChecked(mCrime.isSolved());
+        }
+
+        //This Method Must Be Implemented Because We Have This Class Implementing The onClickListener
+        //Interface. This method Will Do The Work Toasting The Title Of The Crime That Was Clicked On.
+        @Override
+        public void onClick(View view) {
+            Toast.makeText(getActivity(), mCrime.getTitle() + " Clicked!", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private class CrimeAdapter extends RecyclerView.Adapter<CrimeHolder> {
+
+        //Class Level Variable To Hold The 'Data' Of Our App.
+        //This Will Be The List Of Crimes
+        private List<Crime> mCrimes;
+
+        //Constructor That Takes In A List Of Crimes, And
+        //Then Assigns Them To The Class Level Variable.
+        public CrimeAdapter(List<Crime> crimes) {
+            mCrimes = crimes;
+        }
+
+        @Override
+        public CrimeHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            //Get A Layout inflater
+            LayoutInflater layoutInflater = LayoutInflater.from(getActivity());
+
+            //Inflate The View That We Would Like To Use To Display A Single List Item.
+            //Right Now, It Is A Built In Android Layout Called Simple_List_Item_1
+            View v = layoutInflater.inflate(R.layout.list_item_crime, parent, false);
+
+            //Return A New CrimeHolder With The View Passed In As A Parameter
+            return new CrimeHolder(v);
+        }
+
+        @Override
+        public void onBindViewHolder(CrimeHolder holder, int position) {
+            //Get The Crime That Is At The Index Declared By The Variable Position
+            //And Assign It To A Local Crime Variable
+            Crime crime = mCrimes.get(position);
+
+            //Send The Crime Over To The bindCrime method That We Wrote On The CrimeHolder Class.
+            //That Method Does The Work Of Setting The Properties Of The Crime To The Layout
+            //Controls In The Custom Layout We made.
+            holder.bindCrime(crime);
+        }
+
+        @Override
+        public int getItemCount() {
+            //Returns The Size Of The Crime List
+            return mCrimes.size();
+        }
     }
 }
