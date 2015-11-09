@@ -1,5 +1,6 @@
 package edu.kvcc.cis298.inclass3.inclass3;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -57,6 +58,12 @@ public class CrimeListFragment extends Fragment {
         return v;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        updateUI();
+    }
+
     private void updateUI() {
         //Get The Collection Of Data From The crimeLab Singleton. The Get Method Constructor Requires
         //A Context Is Passed In, So We Send It The Hosting Activity Of This Fragment.
@@ -65,12 +72,19 @@ public class CrimeListFragment extends Fragment {
         //Get The Actual List Of Crimes From The CrimeLab Class
         List<Crime> crimes = crimeLab.getCrimes();
 
-        //Create A New CrimeAdapter And Send It Over The List Of Crimes. Crime Adapter Needs The List
-        //Of Crimes So That It Can Work With The RecyclerView To Display Them.
-        mAdapter = new CrimeAdapter(crimes);
+        //If The Adapter Hasn't Been Created Yet, We Want To Create It And Set The Adapter For The
+        //Recycler View
+        if(mAdapter == null) {
+            //Create A New CrimeAdapter And Send It Over The List Of Crimes. Crime Adapter Needs The List
+            //Of Crimes So That It Can Work With The RecyclerView To Display Them.
+            mAdapter = new CrimeAdapter(crimes);
 
-        //Takes The RecyclerView And Sets It's Adapter To The Adapter We Just Created.
-        mCrimeRecyclerView.setAdapter(mAdapter);
+            //Takes The RecyclerView And Sets It's Adapter To The Adapter We Just Created.
+            mCrimeRecyclerView.setAdapter(mAdapter);
+        } else {    //Else, The Adapter Already Exists, SO We Just Need to Notify That The Data Set
+                    //Might Have Changed. This Will Automatically Update Any Data Changes For Us.
+            mAdapter.notifyDataSetChanged();
+        }
     }
 
     private class CrimeHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
@@ -111,7 +125,11 @@ public class CrimeListFragment extends Fragment {
         //Interface. This method Will Do The Work Toasting The Title Of The Crime That Was Clicked On.
         @Override
         public void onClick(View view) {
-            Toast.makeText(getActivity(), mCrime.getTitle() + " Clicked!", Toast.LENGTH_SHORT).show();
+            //Ask CrimeActivity For An Intent That Will Get The CrimeActivity Started. The Method Requires
+            //Us To Pass The Context, Which We Can Get From Calling getActivity(), And The Id Of The Crime
+            //We Want To Start The Activity With. Once We Have The Intent, We Call startActivity To Start It.
+            Intent intent = CrimeActivity.newIntent(getActivity(), mCrime.getId());
+            startActivity(intent);
         }
     }
 
