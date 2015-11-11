@@ -21,6 +21,13 @@ public class Crime {
         mDate = new Date();
     }
 
+    public Crime(UUID id, String title, Date date, boolean solved) {
+        mId = id;
+        mTitle = title;
+        mDate = date;
+        mSolved = solved;
+    }
+
     //Getters And Setters
     //Only Need To Get The UUID, No Need To Set It, So No Setter
 
