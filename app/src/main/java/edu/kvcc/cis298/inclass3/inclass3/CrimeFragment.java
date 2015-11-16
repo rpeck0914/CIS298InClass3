@@ -1,10 +1,8 @@
 package edu.kvcc.cis298.inclass3.inclass3;
 
-import android.app.Activity;
-import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -22,6 +20,14 @@ public class CrimeFragment extends Fragment {
 
     //Static String To Be Used As The Key For Parameters We Set And Retrieve From The Bundle
     private static final String ARG_CRIME_ID = "crime_id";
+    //Used As A Unique Identifier For The Dialog Fragment. It Will Be Used To Ensure That The Fragment
+    //Manager Knows Which Fragment We Are Trying To Use
+    private static final String DIALOG_DATE = "DialogDate";
+
+    //Setup A Request Code That Will Be Used When Sending The Result Of The Dialog To The onActivityResult
+    //To Know That It Is Coming From The Result Of The Dialog And Not Some Other Activity. That's Why We
+    //Need This Code.
+    private static final int REQUEST_DATE = 0;
 
     //Declare A Class Level Variable For A Crime
     private Crime mCrime;
@@ -97,9 +103,26 @@ public class CrimeFragment extends Fragment {
         //Set The Text On The Date Button To The Date From The Crime
         //Model Converted To A String
         mDateButton.setText(mCrime.getDate().toString());
-        //Disable The Button So It Doesn't Do Anything Until We Wire
-        //It Up To Do Something
-        mDateButton.setEnabled(false);
+
+        mDateButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //Get A Fragment Manager That Will Be Required To Display The Dialog
+                FragmentManager manager = getFragmentManager();
+                //Ask The DatePickerFragment Class To Supply Us With A New Fragment That Can Be Used
+                //To Show The Dialog. The newInstance Method Requires That We Pass A Date, And So We
+                //Send It The Crime Date. We Wrote This Method In The DatePickerFragment Class
+                DatePickerFragment dialog = DatePickerFragment.newInstance(mCrime.getDate());
+
+                //Tell The Dialog What It's Return Target Is. We Know That This Dialog Will Return
+                //To The CrimeFragment, And So That Is What We Are Telling It. We Also Pass A Request
+                //Code That Is Declared At The Top Of This Class.
+                dialog.setTargetFragment(CrimeFragment.this, REQUEST_DATE);
+
+                //Call The Show Method On The Dialog Fragment To Show The Dialog On The Screen
+                dialog.show(manager, DIALOG_DATE);
+            }
+        });
 
         //Get A Handle To The Checkbox
         mSolvedCheckbox = (CheckBox) v.findViewById(R.id.crime_solved);
