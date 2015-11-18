@@ -1,6 +1,8 @@
 package edu.kvcc.cis298.inclass3.inclass3;
 
+import android.app.Activity;
 import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -12,6 +14,7 @@ import android.widget.DatePicker;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 
 /**
  * Created by rpeck0914 on 11/16/2015.
@@ -79,7 +82,53 @@ public class DatePickerFragment extends DialogFragment {
         return new AlertDialog.Builder(getActivity())
                 .setView(v)
                 .setTitle(R.string.date_picker_title)
-                .setPositiveButton(android.R.string.ok, null)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    //Make A New onClickListener For The Positive button
+
+                    //Setup The OnClick Method
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        //Get each Part Of The Date Out Of The Date Picker
+                        int year = mDatePicker.getYear();
+                        int month = mDatePicker.getMonth();
+                        int day = mDatePicker.getDayOfMonth();
+
+                        //Create A New Date To Send To Send To The sendResult Method. In Order To Do This,
+                        //We Need To Use The GregorianCalendar Class To Create A GregorianCalendar. With The
+                        //Calendar created, we can call the getTime Method on its so that a timestamp is returned.
+                        //the date object is expecting a timestamp, not a year, month, date or GregorianCalendar
+                        //object.
+                        Date date = new GregorianCalendar(year, month, day).getTime();
+                        //Date the date we just made and send it along with a Result OK to the sendResult
+                        //method created at the bottom of this file. SendResult will explicitly call
+                        //onActivityResult with this information for the activity that is the target of this dialog
+                        sendResult(Activity.RESULT_OK, date);
+                    }
+                })
                 .create();
+    }
+
+    private void sendResult(int resultCode, Date date) {
+        //The Target Fragment Was Set Over In The CrimeFragment Class When We Wired Up The Date Button
+        //To Start This Dialog Fragment. Because It Was Set Over There Before Starting This Fragment,
+        //This Decision Below Should Always Fail. But Just In Case, We Are Putting In A Check.
+        if (getTargetFragment() == null) {
+            return;
+        }
+
+        //Since We Now Know That There Is In Fact A Target Fragment, We Can Use That Fragment To Do Work
+        Intent intent = new Intent();
+        // Add The Date We Want To Send Back As An Extra With The putExtra On The Intent Object
+        intent.putExtra(EXTRA_DATE, date);
+
+        //Use The getTargetFragment To Ge The Destination Of The Return From This Fragment, And Explicitly
+        // Call The onActivityResult Method. Pass Over The Target Request Code That Was Sent When The
+        //Target Fragment Was Set, The Result Code That Got Passed Into This Function And The Intent That
+        //Has The Data WE Just Put Together.
+        //
+        //Remember That When An Activity Returns On It's Own, onActivityResult Is Called Implicitly By
+        //The Android OS. Since We Are Not Returning From An Activity We Have To Do The Work Calling
+        //That Method Explicitly.
+        getTargetFragment().onActivityResult(getTargetRequestCode(), resultCode, intent);
     }
 }
